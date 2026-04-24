@@ -991,6 +991,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                             case CoolsysTmpNom:
                                 invData.InvTemp = value32;
                                 dispData.InvTemp = toTemp(value32);
+                                dispData.hasInvTemp = true;
                                 ESP_LOGI(TAG, "Temp %7.3f C", toTemp(value32));
                                 break;
                             case OperationHealth:

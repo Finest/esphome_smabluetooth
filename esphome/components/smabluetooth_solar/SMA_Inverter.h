@@ -173,6 +173,7 @@ struct DisplayData {
     float Iac2;
     float Iac3;
     float InvTemp;
+    bool hasInvTemp = false;
     float Pdc1;
     float Pdc2;
     float Udc1;

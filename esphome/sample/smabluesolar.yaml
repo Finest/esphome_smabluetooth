@@ -44,6 +44,11 @@ external_components:
 logger:
   level: INFO
 
+# Time sync (required for inverter clock + night mode + daily baselines)
+time:
+  - platform: sntp
+    id: sntp_time
+
 
 # Enable Home Assistant API
 api:

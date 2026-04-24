@@ -33,6 +33,10 @@ See `esphome/sample/smabluesolar.yaml` for a full configuration example.
 - `sma_inverter_btgetbyte_timeout`: low-level byte read timeout (ms) — useful if logon/read frequently hits timeouts
 - `sma_inverter_reconnect_backoff`: list of reconnect delays after consecutive BT failures (recommended)
 
+### Notes on "unknown" values
+- **Inverter clock** (`inverter_time`) needs a valid ESP32 system clock. Add a `time:` component (SNTP or Home Assistant) so `time(nullptr)` is synced.
+- **Module temperature** (`inverter_module_temp`) depends on inverter support. Some models/firmwares do not expose the temperature record, in which case it will remain unavailable.
+
 ### Reconnect backoff (recommended)
 Classic Bluetooth (SPP) on SMA inverters can be flaky (out of range, busy, temporary page timeouts). To avoid aggressive reconnect spam, you can configure a backoff list.
 

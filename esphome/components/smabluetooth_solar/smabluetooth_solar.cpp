@@ -220,9 +220,11 @@ void SmaBluetoothSolar::update() {
     updateSensor(grid_relay_binary_sensor_,  "GridRelay",
                  smaInverter->invData.GridRelay == 51);  // 51 = "Closed"
 
-#if HAVE_MODULE_TEMP
-    updateSensor(inverter_module_temp_,      "InvTemp",   smaInverter->dispData.InvTemp);
-#endif
+    // Some inverters do not report the module temperature record (CoolsysTmpNom).
+    // Only publish when we have seen a valid value to avoid 'unknown' in Home Assistant.
+    if (smaInverter->dispData.hasInvTemp) {
+        updateSensor(inverter_module_temp_, "InvTemp", smaInverter->dispData.InvTemp);
+    }
 
     updateSensor(inverter_bluetooth_signal_strength_, "BTSignal",
                  smaInverter->dispData.BTSigStrength);
