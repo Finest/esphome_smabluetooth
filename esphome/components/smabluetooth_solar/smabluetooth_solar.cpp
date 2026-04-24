@@ -179,17 +179,16 @@ void SmaBluetoothSolar::update() {
     updateSensor(phases_[0].current_sensor_,      "IacA",  smaInverter->dispData.Iac1);
     updateSensor(phases_[0].active_power_sensor_, "PacA",  smaInverter->dispData.Pac1);
 
-#if PHASES > 1
+    // Always publish phase B/C if configured.
+    // For 1-phase inverters, these values remain 0.0 so Home Assistant shows 0
+    // instead of 'unknown/unavailable'.
     updateSensor(phases_[1].voltage_sensor_,      "UacB",  smaInverter->dispData.Uac2);
     updateSensor(phases_[1].current_sensor_,      "IacB",  smaInverter->dispData.Iac2);
     updateSensor(phases_[1].active_power_sensor_, "PacB",  smaInverter->dispData.Pac2);
-#endif
 
-#if PHASES > 2
     updateSensor(phases_[2].voltage_sensor_,      "UacC",  smaInverter->dispData.Uac3);
     updateSensor(phases_[2].current_sensor_,      "IacC",  smaInverter->dispData.Iac3);
     updateSensor(phases_[2].active_power_sensor_, "PacC",  smaInverter->dispData.Pac3);
-#endif
 
     updateSensor(status_text_sensor_,        "InvStatus",
                  std::string(lookup_code(smaInverter->invData.DevStatus)));
