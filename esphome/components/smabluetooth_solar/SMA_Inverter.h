@@ -39,6 +39,7 @@ SOFTWARE.
 #include "esp_spp_api.h"
 
 #include <string>
+#include <vector>
 #include <cstring>
 #include <cstdint>
 #include <ctime>
@@ -314,6 +315,16 @@ class ESP32_SMA_Inverter {
     bool isBtConnected() const { return btConnected_; }
     bool isNightModeActive() const { return night_mode_active_; }
 
+    // Reconnect backoff (seconds). Used inside btTask() for discovery/connect failures.
+    void setReconnectBackoff(std::vector<uint32_t> v) { reconnect_backoff_s_ = std::move(v); }
+    uint32_t getReconnectBackoffSeconds() const {
+        if (reconnect_backoff_s_.empty()) return 5;
+        uint32_t fails = connect_fail_count_;
+        uint32_t idx = (fails == 0) ? 0 : (fails - 1);
+        if (idx >= reconnect_backoff_s_.size()) idx = reconnect_backoff_s_.size() - 1;
+        return reconnect_backoff_s_[idx];
+    }
+
     void requestTimeSync()     { sync_time_requested_ = true; }
     void requestTimeFetch()    { fetch_time_requested_ = true; }
 
@@ -390,6 +401,10 @@ class ESP32_SMA_Inverter {
 
     // Consecutive connection failure counter used for reconnect backoff.
     volatile uint32_t connect_fail_count_ = 0;
+
+    // Reconnect backoff steps (seconds) — configured via smabluetooth_solar YAML.
+    std::vector<uint32_t> reconnect_backoff_s_{5, 10, 20, 40, 60};
+
     volatile bool stop_task_          = false;
     volatile bool sync_time_requested_  = false;
     volatile bool fetch_time_requested_ = false;

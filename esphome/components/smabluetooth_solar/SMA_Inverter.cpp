@@ -403,7 +403,10 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         if (err != ESP_OK) {
             ESP_LOGE(TTAG, "spp_start_discovery: %s", esp_err_to_name(err));
             self->incConnectFailCount();
-            vTaskDelay(pdMS_TO_TICKS(5000));
+            uint32_t delay_s = self->getReconnectBackoffSeconds();
+            ESP_LOGW(TTAG, "Reconnect backoff: waiting %us (fail #%u)", (unsigned)delay_s,
+                     (unsigned)self->getConnectFailCount());
+            vTaskDelay(pdMS_TO_TICKS(delay_s * 1000));
             continue;
         }
 
@@ -413,7 +416,10 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         if (!(bits & BT_EVT_DISC_DONE)) {
             ESP_LOGE(TTAG, "SPP discovery timeout");
             self->incConnectFailCount();
-            vTaskDelay(pdMS_TO_TICKS(5000));
+            uint32_t delay_s = self->getReconnectBackoffSeconds();
+            ESP_LOGW(TTAG, "Reconnect backoff: waiting %us (fail #%u)", (unsigned)delay_s,
+                     (unsigned)self->getConnectFailCount());
+            vTaskDelay(pdMS_TO_TICKS(delay_s * 1000));
             continue;
         }
 
@@ -425,7 +431,10 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         if (err != ESP_OK) {
             ESP_LOGE(TTAG, "spp_connect: %s", esp_err_to_name(err));
             self->incConnectFailCount();
-            vTaskDelay(pdMS_TO_TICKS(5000));
+            uint32_t delay_s = self->getReconnectBackoffSeconds();
+            ESP_LOGW(TTAG, "Reconnect backoff: waiting %us (fail #%u)", (unsigned)delay_s,
+                     (unsigned)self->getConnectFailCount());
+            vTaskDelay(pdMS_TO_TICKS(delay_s * 1000));
             continue;
         }
 
@@ -435,7 +444,10 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         if (!(bits & BT_EVT_CONNECTED)) {
             ESP_LOGE(TTAG, "SPP connect timeout or failed");
             self->incConnectFailCount();
-            vTaskDelay(pdMS_TO_TICKS(5000));
+            uint32_t delay_s = self->getReconnectBackoffSeconds();
+            ESP_LOGW(TTAG, "Reconnect backoff: waiting %us (fail #%u)", (unsigned)delay_s,
+                     (unsigned)self->getConnectFailCount());
+            vTaskDelay(pdMS_TO_TICKS(delay_s * 1000));
             continue;
         }
 

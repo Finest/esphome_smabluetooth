@@ -111,6 +111,9 @@ void SmaBluetoothSolar::loop() {
     case SmaInverterState::Off:
         // Initialise BT stack and launch the protocol task
         if (smaInverter->begin("ESP32toSMA")) {
+            // Pass reconnect backoff configuration down to the BT task.
+            smaInverter->setReconnectBackoff(sma_inverter_reconnect_backoff_);
+
             smaInverter->startBtTask();
             inverterState = SmaInverterState::Running;
             ESP_LOGI(TAG, "BT task started, state -> Running");
@@ -172,6 +175,7 @@ void SmaBluetoothSolar::loop() {
     case SmaInverterState::Error:
         if (now >= errorRetryTime_) {
             ESP_LOGI(TAG, "Restarting BT task");
+            smaInverter->setReconnectBackoff(sma_inverter_reconnect_backoff_);
             smaInverter->startBtTask();
             inverterState = SmaInverterState::Running;
         }
