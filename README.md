@@ -24,4 +24,18 @@ Only the original ESP32 supports classic Bluetooth (SPP). Other variants do **no
 ## Usage
 See `esphome/sample/smabluesolar.yaml` for a full configuration example.
 
+### Reconnect backoff (recommended)
+Classic Bluetooth (SPP) on SMA inverters can be flaky (out of range, busy, temporary page timeouts). To avoid aggressive reconnect spam, you can configure a backoff list.
+
+```yaml
+smabluetooth_solar:
+  # ...
+  sma_inverter_reconnect_backoff: [5s, 10s, 20s, 40s, 60s]
+```
+
+Behavior:
+- After each consecutive BT connect/discovery failure, the next delay in the list is used.
+- Once the last entry is reached, the component keeps using that delay.
+- After a successful connection, the backoff resets to the first entry.
+
 For local development, replace the `external_components` GitHub URL with a `path:` pointing to the repository root.

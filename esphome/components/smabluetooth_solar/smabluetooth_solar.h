@@ -43,6 +43,7 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #define HAVE_MODULE_TEMP false
 
 #include "esphome/core/component.h"
+#include <vector>
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
@@ -102,6 +103,7 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_sma_inverter_password(std::string v)            { sma_inverter_password_ = v; }
     void set_sma_inverter_delay_values(uint32_t v)           { sma_inverter_delay_values_ = v; }
     void set_sma_inverter_btgetbyte_timeout(uint32_t v)       { sma_inverter_btgetbyte_timeout_ = v; }
+    void set_sma_inverter_reconnect_backoff(std::vector<uint32_t> v) { sma_inverter_reconnect_backoff_ = std::move(v); }
 
     // Callable from a YAML button/lambda: queues a time sync for the BT task
     void trigger_time_sync() {
@@ -191,6 +193,9 @@ class SmaBluetoothSolar : public PollingComponent {
     uint32_t    sma_inverter_delay_values_ = 500;
     uint32_t    sma_inverter_btgetbyte_timeout_ = 5000;
 
+    // Reconnect throttling steps (seconds) for consecutive BT failures.
+    std::vector<uint32_t> sma_inverter_reconnect_backoff_{5, 10, 20, 40, 60};
+
     static const StatusCode status_codes[];
 
   private:
@@ -200,6 +205,7 @@ class SmaBluetoothSolar : public PollingComponent {
     uint32_t            nextNightModeStatusLogTime_{0};
     bool                hasSetup_{false};
     bool                nightModeStatusActive_{false};
+
 
     // Daily baselines for "today" counters.
     // SMA provides total counters (e.g. total operation/feed-in time). We derive a

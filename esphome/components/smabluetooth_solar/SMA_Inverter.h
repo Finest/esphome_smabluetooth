@@ -305,7 +305,11 @@ class ESP32_SMA_Inverter {
     bool isDataReady()   const { return data_ready_; }
     void clearDataReady()      { data_ready_ = false; }
     bool hasTaskError()  const { return task_error_; }
-    void clearTaskError()      { task_error_ = false; }
+    void clearTaskError()      { task_error_ = false; connect_fail_count_ = 0; }
+
+    uint32_t getConnectFailCount() const { return connect_fail_count_; }
+    void resetConnectFailCount() { connect_fail_count_ = 0; }
+    void incConnectFailCount() { connect_fail_count_++; }
     bool isBtConnected() const { return btConnected_; }
     bool isNightModeActive() const { return night_mode_active_; }
 
@@ -382,6 +386,9 @@ class ESP32_SMA_Inverter {
     volatile bool btConnected_        = false;
     volatile bool data_ready_         = false;
     volatile bool task_error_         = false;
+
+    // Consecutive connection failure counter used for reconnect backoff.
+    volatile uint32_t connect_fail_count_ = 0;
     volatile bool stop_task_          = false;
     volatile bool sync_time_requested_  = false;
     volatile bool fetch_time_requested_ = false;

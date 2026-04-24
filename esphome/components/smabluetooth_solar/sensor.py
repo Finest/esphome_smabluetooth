@@ -70,6 +70,7 @@ CONF_SMA_INVERTER_BLUETOOTH_MAC = "sma_inverter_bluetooth_mac"
 CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
 CONF_SMA_INVERTER_DELAY_VALUES = "sma_inverter_delay_values"
 CONF_SMA_INVERTER_BTGETBYTE_TIMEOUT = "sma_inverter_btgetbyte_timeout"
+CONF_SMA_INVERTER_RECONNECT_BACKOFF = "sma_inverter_reconnect_backoff"
 
 CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH = "sma_inverter_bluetooth_signal_strength"
 
@@ -153,6 +154,14 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.string,
             cv.Optional(CONF_SMA_INVERTER_DELAY_VALUES, default="200ms"): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_SMA_INVERTER_BTGETBYTE_TIMEOUT, default="5000ms"): cv.positive_time_period_milliseconds,
+
+            # Reconnect throttling: list of delays used after consecutive BT failures.
+            # Example: [5s, 10s, 20s, 40s, 60s]
+            # After reaching the last entry, the component keeps using that delay.
+            cv.Optional(CONF_SMA_INVERTER_RECONNECT_BACKOFF, default=["5s","10s","20s","40s","60s"]): cv.All(
+                cv.ensure_list(cv.positive_time_period_seconds),
+                cv.Length(min=1),
+            ),
 
             cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PERCENT,
@@ -251,6 +260,9 @@ async def to_code(config):
 
     if CONF_SMA_INVERTER_BTGETBYTE_TIMEOUT in config:
         cg.add(var.set_sma_inverter_btgetbyte_timeout(config[CONF_SMA_INVERTER_BTGETBYTE_TIMEOUT].total_milliseconds))
+
+    if CONF_SMA_INVERTER_RECONNECT_BACKOFF in config:
+        cg.add(var.set_sma_inverter_reconnect_backoff([int(x.total_seconds) for x in config[CONF_SMA_INVERTER_RECONNECT_BACKOFF]]))
 
     cg.add(var.set_protocol_version(config[CONF_PROTOCOL_VERSION]))
 

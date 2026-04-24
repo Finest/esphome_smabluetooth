@@ -401,6 +401,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         esp_err_t err = esp_spp_start_discovery(self->smaBTAddress);
         if (err != ESP_OK) {
             ESP_LOGE(TTAG, "spp_start_discovery: %s", esp_err_to_name(err));
+            self->incConnectFailCount();
             vTaskDelay(pdMS_TO_TICKS(5000));
             continue;
         }
@@ -410,6 +411,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             pdMS_TO_TICKS(10000));
         if (!(bits & BT_EVT_DISC_DONE)) {
             ESP_LOGE(TTAG, "SPP discovery timeout");
+            self->incConnectFailCount();
             vTaskDelay(pdMS_TO_TICKS(5000));
             continue;
         }
@@ -421,6 +423,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
                               self->discovered_scn_, self->smaBTAddress);
         if (err != ESP_OK) {
             ESP_LOGE(TTAG, "spp_connect: %s", esp_err_to_name(err));
+            self->incConnectFailCount();
             vTaskDelay(pdMS_TO_TICKS(5000));
             continue;
         }
@@ -430,11 +433,13 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             pdMS_TO_TICKS(15000));
         if (!(bits & BT_EVT_CONNECTED)) {
             ESP_LOGE(TTAG, "SPP connect timeout or failed");
+            self->incConnectFailCount();
             vTaskDelay(pdMS_TO_TICKS(5000));
             continue;
         }
 
         ESP_LOGI(TTAG, "Connected to SMA inverter");
+        self->resetConnectFailCount();
         self->initPcktID();
         self->flushRxBuffer();
 
@@ -549,8 +554,10 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             esp_spp_disconnect((uint32_t)self->spp_handle_);
         }
         self->btConnected_ = false;
-        ESP_LOGI(TTAG, "Disconnected, retrying in 5 s");
-        vTaskDelay(pdMS_TO_TICKS(5000));
+
+        // Minimal delay here; actual reconnect backoff is handled by the outer state
+        // machine in smabluetooth_solar.cpp so it can be configured from YAML.
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 
     ESP_LOGI(TTAG, "BT task stopping");
