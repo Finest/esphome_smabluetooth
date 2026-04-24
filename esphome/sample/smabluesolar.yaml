@@ -2,6 +2,10 @@ substitutions:
   name: smablue-stream
   friendly_name: smablue-stream
 
+  # Optional: set to true if you want a fallback AP for WiFi recovery.
+  # (If you enable AP, also enable captive_portal or web_server.)
+  enable_fallback_ap: "false"
+
 esphome:
   name: ${name}
   name_add_mac_suffix: false
@@ -21,15 +25,18 @@ esp32:
       CONFIG_BT_BLE_ENABLED: "n"
 
 external_components:
+  # For production, use git:
   - source:
-      type: local
-      path: ../components
+      type: git
+      url: https://github.com/Finest/esphome_smabluetooth
+      ref: main
     components: [smabluetooth_solar]
     refresh: 0sec
-  # For production (after pushing to GitHub), replace the above with:
+
+  # For local development, replace the above with:
   # - source:
-  #     type: git
-  #     url: https://github.com/keerekeerweere/esphome_smabluetooth
+  #     type: local
+  #     path: ../components
   #   components: [smabluetooth_solar]
   #   refresh: 0sec
 
@@ -37,22 +44,24 @@ external_components:
 logger:
   level: INFO
 
+
 # Enable Home Assistant API
 api:
-  encryption: 
+  encryption:
     key: !secret api_encryption_key
 
 ota:
   - platform: esphome
-    password: !secret ota_password 
+    password: !secret ota_password
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  # Optional fallback hotspot in case WiFi connection fails.
+  # If you enable this, also enable captive_portal or web_server.
   ap:
-    ssid: "espcustom Fallback Hotspot"
+    ssid: "${friendly_name} Fallback Hotspot"
     password: !secret wifi_password
 
 
@@ -70,11 +79,16 @@ sensor:
   - platform: smabluetooth_solar
     id: sma_inverter
     update_interval: 10s
+
+    # Inverter connection
     sma_inverter_bluetooth_mac: !secret sma_stream_bluetoothmac
     sma_inverter_password: !secret sma_stream_password
-    sma_inverter_delay_values: 800ms
 
-    # Optional but recommended: throttle reconnect attempts after consecutive failures
+    # Tuning / robustness
+    sma_inverter_delay_values: 800ms
+    sma_inverter_btgetbyte_timeout: 5000ms
+
+    # Throttle reconnect attempts after consecutive failures
     # (out of range, inverter busy, BT page timeouts, etc.).
     sma_inverter_reconnect_backoff: [5s, 10s, 20s, 40s, 60s]
 
@@ -91,20 +105,23 @@ sensor:
           name: "Current Phase A"
       active_power:
           name: "Power Phase A"
+    # NOTE: For single-phase inverters, Phase B/C do not exist.
+    # If you keep them configured anyway (e.g. fixed dashboard layout),
+    # the component will publish 0.0 so Home Assistant shows 0 instead of "unknown".
     phase_b:
       voltage:
-          name: "Voltage Phase B"
+        name: "Voltage Phase B"
       current:
-          name: "Current Phase B"
+        name: "Current Phase B"
       active_power:
-          name: "Power Phase B"
+        name: "Power Phase B"
     phase_c:
       voltage:
-          name: "Voltage Phase C"
+        name: "Voltage Phase C"
       current:
-          name: "Current Phase C"
+        name: "Current Phase C"
       active_power:
-          name: "Power Phase C"
+        name: "Power Phase C"
 
     pv1:
       voltage:
@@ -138,10 +155,13 @@ sensor:
       name: "Total Energy Production"
 
     today_generation_time:
-      name: "Today's Generation Time"
+      name: "Today's Generation Time"  # derived from total op time baselines
 
     total_generation_time:
       name: "Total Generation Time"
+
+    total_operation_time:
+      name: "Total Operation Time"
 
     wakeup_time:
       name: "Wakeup Time"
