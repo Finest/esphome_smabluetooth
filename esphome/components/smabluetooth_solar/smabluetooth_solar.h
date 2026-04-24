@@ -196,6 +196,14 @@ class SmaBluetoothSolar : public PollingComponent {
     bool                hasSetup_{false};
     bool                nightModeStatusActive_{false};
 
+    // Daily baselines for "today" counters.
+    // SMA provides total counters (e.g. total operation/feed-in time). We derive a
+    // per-day value by subtracting the first seen total value of the current day.
+    int      last_local_yday_{-1};
+    uint64_t op_time_base_{0};
+    uint64_t feed_time_base_{0};
+    bool     time_base_set_{false};
+
     const float EPSILON = 0.0001f;
 };
 

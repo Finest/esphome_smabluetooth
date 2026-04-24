@@ -201,10 +201,36 @@ void SmaBluetoothSolar::update() {
 
     updateSensor(inverter_bluetooth_signal_strength_, "BTSignal",
                  smaInverter->dispData.BTSigStrength);
-    updateSensor(today_generation_time_,  "TToday",
-                 (float)smaInverter->invData.OperationTime / 3600.0f);
-    updateSensor(total_generation_time_,  "TTotal",
-                 (float)smaInverter->invData.FeedInTime / 3600.0f);
+
+    // Derive per-day ("today") generation/runtime counters from SMA total counters.
+    // Note: SMA returns total operation time and total feed-in time. We store the
+    // first seen totals per local day and subtract them.
+    time_t now = time(nullptr);
+    if (now > 0) {
+        struct tm local_tm;
+        localtime_r(&now, &local_tm);
+        if (local_tm.tm_yday != last_local_yday_) {
+            last_local_yday_ = local_tm.tm_yday;
+            op_time_base_ = smaInverter->invData.OperationTime;
+            feed_time_base_ = smaInverter->invData.FeedInTime;
+            time_base_set_ = true;
+        }
+    }
+
+    float today_hours = 0.0f;
+    float total_hours = 0.0f;
+
+    if (time_base_set_ && smaInverter->invData.OperationTime >= op_time_base_) {
+        today_hours = (float)(smaInverter->invData.OperationTime - op_time_base_) / 3600.0f;
+    }
+
+    // Keep the existing sensor meaning for total_generation_time_: total feed-in time
+    // (some inverters may not report it; then it will stay 0.0).
+    total_hours = (float)smaInverter->invData.FeedInTime / 3600.0f;
+
+    updateSensor(today_generation_time_,  "TToday", today_hours);
+    updateSensor(total_generation_time_,  "TTotal", total_hours);
+
     updateSensor(wakeup_time_,            "TWakeup",
                  (uint64_t)smaInverter->invData.WakeupTime);
     updateSensor(serial_number_,          "SerialNum",  smaInverter->invData.DeviceName);
