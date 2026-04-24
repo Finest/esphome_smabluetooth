@@ -205,8 +205,10 @@ void SmaBluetoothSolar::update() {
     // Derive per-day ("today") generation/runtime counters from SMA total counters.
     // Note: SMA returns total operation time and total feed-in time. We store the
     // first seen totals per local day and subtract them.
+    // Guard: if system time isn't synced yet, do not (re)baseline.
     time_t now = time(nullptr);
-    if (now > 0) {
+    static const time_t MIN_TIME_FOR_DAILY_BASELINE = 1577836800;  // 2020-01-01 UTC
+    if (now >= MIN_TIME_FOR_DAILY_BASELINE) {
         struct tm local_tm;
         localtime_r(&now, &local_tm);
         if (local_tm.tm_yday != last_local_yday_) {
