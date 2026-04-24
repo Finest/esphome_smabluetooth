@@ -209,6 +209,7 @@ void ESP32_SMA_Inverter::startBtTask() {
     }
     stop_task_  = false;
     task_error_ = false;
+    connect_fail_count_ = 0;
     ESP_LOGI(TAG, "Starting BT protocol task");
     TaskHandle_t h = nullptr;
     xTaskCreatePinnedToCore(

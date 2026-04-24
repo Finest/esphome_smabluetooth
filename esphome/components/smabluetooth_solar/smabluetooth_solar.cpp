@@ -146,7 +146,22 @@ void SmaBluetoothSolar::loop() {
                 delay_s = sma_inverter_reconnect_backoff_[idx];
             }
 
-            ESP_LOGE(TAG, "BT task error detected, restarting in %u s (fail #%u)", delay_s, fails);
+            const bool has_backoff = !sma_inverter_reconnect_backoff_.empty();
+            ESP_LOGE(TAG, "BT task error detected, restarting in %u s (fail #%u)%s", delay_s, fails,
+                     has_backoff ? " (backoff list)" : "");
+
+            // For troubleshooting: log the full list once (and only once per error burst).
+            if (has_backoff && fails == 1) {
+                std::string list;
+                for (size_t i = 0; i < sma_inverter_reconnect_backoff_.size(); i++) {
+                    char buf[16];
+                    snprintf(buf, sizeof(buf), "%us", (unsigned) sma_inverter_reconnect_backoff_[i]);
+                    if (!list.empty()) list += ",";
+                    list += buf;
+                }
+                ESP_LOGI(TAG, "Reconnect backoff list: [%s]", list.c_str());
+            }
+
             smaInverter->clearTaskError();
             smaInverter->stopBtTask();
             errorRetryTime_ = now + (delay_s * 1000);

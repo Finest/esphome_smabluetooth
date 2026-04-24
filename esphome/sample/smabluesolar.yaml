@@ -74,6 +74,10 @@ sensor:
     sma_inverter_password: !secret sma_stream_password
     sma_inverter_delay_values: 800ms
 
+    # Optional but recommended: throttle reconnect attempts after consecutive failures
+    # (out of range, inverter busy, BT page timeouts, etc.).
+    sma_inverter_reconnect_backoff: [5s, 10s, 20s, 40s, 60s]
+
     inverter_status: 
       name: "Inverter Status"
 
