@@ -95,6 +95,7 @@ void SmaBluetoothSolar::setup() {
     smaInverter->setup(sma_inverter_bluetooth_mac_,
                        sma_inverter_password_,
                        sma_inverter_delay_values_);
+    smaInverter->setBtgetByteTimeout(sma_inverter_btgetbyte_timeout_);
     hasSetup_ = true;
     ESP_LOGW(TAG, "Setup done, inverter mac=%s", sma_inverter_bluetooth_mac_.c_str());
 }

@@ -100,6 +100,7 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_sma_inverter_bluetooth_mac(std::string v)       { sma_inverter_bluetooth_mac_ = v; }
     void set_sma_inverter_password(std::string v)            { sma_inverter_password_ = v; }
     void set_sma_inverter_delay_values(uint32_t v)           { sma_inverter_delay_values_ = v; }
+    void set_sma_inverter_btgetbyte_timeout(uint32_t v)       { sma_inverter_btgetbyte_timeout_ = v; }
 
     // Callable from a YAML button/lambda: queues a time sync for the BT task
     void trigger_time_sync() {
@@ -187,6 +188,7 @@ class SmaBluetoothSolar : public PollingComponent {
     std::string sma_inverter_bluetooth_mac_;
     std::string sma_inverter_password_;
     uint32_t    sma_inverter_delay_values_ = 500;
+    uint32_t    sma_inverter_btgetbyte_timeout_ = 5000;
 
     static const StatusCode status_codes[];
 
