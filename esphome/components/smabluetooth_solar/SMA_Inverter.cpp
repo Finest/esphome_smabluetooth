@@ -45,7 +45,12 @@ const getInverterDataType SLOW_TYPES[] = {
     DeviceStatus, GridRelayStatus, InverterTemp
 };
 const getInverterDataType IGNORE_ERRORS[] = {
-    DeviceStatus, GridRelayStatus, InverterTemp, SpotDCPower, SpotACPower, OperationTime
+    // Some older inverters/firmwares intermittently return no-data/timeouts for
+    // certain query ranges. Treat these as non-fatal so other values can still be read.
+    DeviceStatus, GridRelayStatus, InverterTemp,
+    SpotDCPower, SpotDCVoltage,
+    SpotACPower,
+    OperationTime
 };
 
 constexpr int NUM_FAST = sizeof(FAST_TYPES) / sizeof(FAST_TYPES[0]);
