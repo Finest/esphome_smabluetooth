@@ -49,7 +49,7 @@ const getInverterDataType IGNORE_ERRORS[] = {
     // certain query ranges. Treat these as non-fatal so other values can still be read.
     DeviceStatus, GridRelayStatus, InverterTemp,
     SpotDCPower, SpotDCVoltage,
-    SpotACPower,
+    SpotACPower, SpotACTotalPower,
     OperationTime
 };
 
@@ -783,10 +783,20 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
             if (invData.status != E_OK) return invData.status;
 
             if (validateChecksum()) {
-                if ((invData.status = (E_RC)get_u16(pcktBuf + 23)) != E_OK) {
-                    ESP_LOGD(TAG, "Packet status 0x%02X", invData.status);
+                // SMA packet status:
+                // Some inverters return non-zero/0xFFFF for certain query ranges.
+                // Treat common values as "no data" so the polling loop can continue.
+                uint16_t pkt_status = get_u16(pcktBuf + 23);
+                if (pkt_status != 0) {
+                    ESP_LOGD(TAG, "Packet status 0x%04X", pkt_status);
+                    if (pkt_status == 0xFFFF || pkt_status == 0x0100) {
+                        invData.status = E_NODATA;
+                        return invData.status;
+                    }
+                    invData.status = (E_RC)pkt_status;
                     return invData.status;
                 }
+                invData.status = E_OK;
                 uint8_t iSPOT_PDC = 0, iSPOT_UDC = 0, iSPOT_IDC = 0;
                 pcktcount = get_u16(pcktBuf + 25);
                 uint16_t rcvpcktID = get_u16(pcktBuf + 27) & 0x7FFF;
