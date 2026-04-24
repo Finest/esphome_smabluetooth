@@ -52,6 +52,7 @@ CONF_ENERGY_PRODUCTION_DAY = "energy_production_day"
 CONF_TOTAL_ENERGY_PRODUCTION = "total_energy_production"
 CONF_TOTAL_GENERATION_TIME = "total_generation_time"
 CONF_TODAY_GENERATION_TIME = "today_generation_time"
+CONF_TOTAL_OPERATION_TIME = "total_operation_time"
 CONF_WAKEUP_TIME = "wakeup_time"
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_SOFTWARE_VERSION = "software_version"
@@ -212,6 +213,13 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_DURATION,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
+            cv.Optional(CONF_TOTAL_OPERATION_TIME): sensor.sensor_schema(
+                unit_of_measurement=UNIT_HOUR,
+                icon=ICON_TIMER,
+                accuracy_decimals=3,
+                device_class=DEVICE_CLASS_DURATION,
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+            ),
             cv.Optional(CONF_WAKEUP_TIME): sensor.sensor_schema(
                 icon=ICON_CLOCK,
                 device_class=DEVICE_CLASS_TIMESTAMP,
@@ -276,6 +284,10 @@ async def to_code(config):
     if CONF_TOTAL_GENERATION_TIME in config:
         sens = await sensor.new_sensor(config[CONF_TOTAL_GENERATION_TIME])
         cg.add(var.set_total_generation_time(sens))
+
+    if CONF_TOTAL_OPERATION_TIME in config:
+        sens = await sensor.new_sensor(config[CONF_TOTAL_OPERATION_TIME])
+        cg.add(var.set_total_operation_time(sens))
 
     if CONF_WAKEUP_TIME in config:
         sens = await sensor.new_sensor(config[CONF_WAKEUP_TIME])

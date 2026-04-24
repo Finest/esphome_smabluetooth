@@ -127,6 +127,7 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_inverter_bluetooth_signal_strength(sensor::Sensor *s){ inverter_bluetooth_signal_strength_ = s; }
     void set_today_generation_time(sensor::Sensor *s)             { today_generation_time_ = s; }
     void set_total_generation_time(sensor::Sensor *s)             { total_generation_time_ = s; }
+    void set_total_operation_time(sensor::Sensor *s)              { total_operation_time_ = s; }
     void set_wakeup_time(sensor::Sensor *s)                       { wakeup_time_ = s; }
     void set_serial_number(text_sensor::TextSensor *s)            { serial_number_ = s; }
     void set_software_version(text_sensor::TextSensor *s)         { software_version_ = s; }
@@ -174,6 +175,7 @@ class SmaBluetoothSolar : public PollingComponent {
     sensor::Sensor *inverter_bluetooth_signal_strength_{nullptr};
     sensor::Sensor *today_generation_time_{nullptr};
     sensor::Sensor *total_generation_time_{nullptr};
+    sensor::Sensor *total_operation_time_{nullptr};
     sensor::Sensor *wakeup_time_{nullptr};
     text_sensor::TextSensor *serial_number_{nullptr};
     text_sensor::TextSensor *software_version_{nullptr};

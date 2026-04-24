@@ -221,6 +221,7 @@ void SmaBluetoothSolar::update() {
 
     float today_hours = 0.0f;
     float total_hours = 0.0f;
+    float total_op_hours = 0.0f;
 
     if (time_base_set_ && smaInverter->invData.OperationTime >= op_time_base_) {
         today_hours = (float)(smaInverter->invData.OperationTime - op_time_base_) / 3600.0f;
@@ -230,8 +231,12 @@ void SmaBluetoothSolar::update() {
     // (some inverters may not report it; then it will stay 0.0).
     total_hours = (float)smaInverter->invData.FeedInTime / 3600.0f;
 
-    updateSensor(today_generation_time_,  "TToday", today_hours);
-    updateSensor(total_generation_time_,  "TTotal", total_hours);
+    // Total operation time (lifetime)
+    total_op_hours = (float)smaInverter->invData.OperationTime / 3600.0f;
+
+    updateSensor(today_generation_time_,   "TToday", today_hours);
+    updateSensor(total_generation_time_,   "TTotal", total_hours);
+    updateSensor(total_operation_time_,    "TOpTotal", total_op_hours);
 
     updateSensor(wakeup_time_,            "TWakeup",
                  (uint64_t)smaInverter->invData.WakeupTime);
