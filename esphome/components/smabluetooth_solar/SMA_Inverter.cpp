@@ -819,9 +819,13 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                         }
 
                         for (uint16_t ii = 41; ii < pcktBufPos - 3; ii += recordsize) {
-                            // Ensure the full record (up to offset +20) is within the buffer
-                            if (ii + 20 > pcktBufPos) {
-                                ESP_LOGW(TAG, "Record at %d exceeds pcktBufPos=%d, stopping", ii, pcktBufPos);
+                            // Ensure the record is within the buffer.
+                            // We need:
+                            //  - recordsize==16: code(4)+time(4)+value64(8) => 16 bytes
+                            //  - otherwise (numeric): we read value32 at +16 => 20 bytes total
+                            uint16_t required = (recordsize == 16) ? 16 : 20;
+                            if (ii + required > pcktBufPos) {
+                                ESP_LOGW(TAG, "Record at %d exceeds pcktBufPos=%d (need %u), stopping", ii, pcktBufPos, required);
                                 break;
                             }
                             uint8_t *recptr  = pcktBuf + ii;
