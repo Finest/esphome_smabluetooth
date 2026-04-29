@@ -124,8 +124,8 @@ void SmaBluetoothSolar::loop() {
         }
         break;
 
-    case SmaInverterState::Running:
-        // Task runs autonomously. Just watch for errors.
+    case SmaInverterState::Running: {
+        // Task runs autonomously. Just watch for errors and apply a watchdog.
         if (smaInverter->isNightModeActive()) {
             if (!nightModeStatusActive_ || now >= nextNightModeStatusLogTime_) {
                 ESP_LOGI(TAG, "Night mode active; inverter polling suspended until the next wake check");
@@ -136,6 +136,30 @@ void SmaBluetoothSolar::loop() {
             ESP_LOGI(TAG, "Night mode inactive; inverter polling resumed");
             nightModeStatusActive_ = false;
             nextNightModeStatusLogTime_ = 0;
+        }
+
+        // Watchdog: if we are NOT in night mode but we haven't seen fresh data for a while,
+        // restart the BT task. This fixes cases where the task gets stuck without setting task_error_.
+        static uint32_t last_data_ready_ms = 0;
+        static bool wd_initialized = false;
+        static uint32_t next_wd_log_ms = 0;
+
+        if (smaInverter->isDataReady()) {
+            last_data_ready_ms = now;
+            wd_initialized = true;
+        } else if (!smaInverter->isNightModeActive() && wd_initialized) {
+            const uint32_t STALE_MS = 20 * 60 * 1000;  // 20 min
+            if ((now - last_data_ready_ms) > STALE_MS) {
+                ESP_LOGW(TAG, "Watchdog: no fresh inverter data for %u s (night mode inactive) -> restarting BT task", (unsigned)((now - last_data_ready_ms) / 1000));
+                smaInverter->stopBtTask();
+                smaInverter->startBtTask();
+                last_data_ready_ms = now;
+                next_wd_log_ms = 0;
+            } else if (now >= next_wd_log_ms) {
+                // Lightweight periodic status line while we're waiting for data to come back.
+                ESP_LOGD(TAG, "Watchdog: waiting for fresh inverter data (%u s since last)", (unsigned)((now - last_data_ready_ms) / 1000));
+                next_wd_log_ms = now + 5 * 60 * 1000;
+            }
         }
 
         if (smaInverter->hasTaskError()) {
@@ -170,7 +194,9 @@ void SmaBluetoothSolar::loop() {
             errorRetryTime_ = now + (delay_s * 1000);
             inverterState   = SmaInverterState::Error;
         }
+
         break;
+    }
 
     case SmaInverterState::Error:
         if (now >= errorRetryTime_) {

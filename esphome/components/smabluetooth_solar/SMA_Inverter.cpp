@@ -386,7 +386,8 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             } else {
                 ESP_LOGI(TTAG, "Night mode: inverter idle, sleeping 30 min");
             }
-            vTaskDelay(pdMS_TO_TICKS(30 * 60 * 1000));
+            // Check more frequently so we resume promptly at sunrise even if timing/offset heuristics are slightly off.
+            vTaskDelay(pdMS_TO_TICKS(5 * 60 * 1000));
             continue;
         }
         if (self->night_mode_active_) {
